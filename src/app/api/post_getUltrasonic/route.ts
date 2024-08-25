@@ -21,7 +21,7 @@ const corsHeaders = {
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
-export async function Post(Request: Request) {
+export async function POST(Request: Request) {
     try {
         const requestBody = await Request.json(); // Parse the request body as JSON
         const { ultrasonicValue, status } = requestBody;
