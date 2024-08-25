@@ -8,7 +8,9 @@ import dht
 # กำหนด Pin สำหรับ trigger, echo, LED และ DHT11
 trigger = Pin(20, Pin.OUT)
 echo = Pin(21, Pin.IN)
-led = Pin(22, Pin.OUT)
+led_ultrasonic = Pin(22, Pin.OUT)  # LED สีแดง
+led_green = Pin(1, Pin.OUT)  # LED สีเขียว
+led_red = Pin(17, Pin.OUT)
 dht_sensor = dht.DHT11(Pin(16))
 
 ssid = "Galaxy A05s 7407"
@@ -30,7 +32,7 @@ def ultra():
     trigger.low()
     utime.sleep_us(2)
     trigger.high()
-    utime.sleep_us(2)
+    utime.sleep_us(5)
     trigger.low()
     
     while echo.value() == 0:
@@ -51,34 +53,39 @@ def read_dht11():
     humidity = dht_sensor.humidity()
     return temperature, humidity
 
-# ฟังก์ชันสำหรับส่งข้อมูล Ultrasonic sensor ไปยัง API
-def send_ultrasonic_to_api(distance, status):
+# ฟังก์ชันสำหรับดึงข้อมูลจากฐานข้อมูล
+def get_led_status():
     try:
-        url = "https://my-miniproject67-1nhqv10rf-jaryins-projects.vercel.app/api/post_getUltrasonic"
+        url = "https://my-miniproject67-j2365ebyd-jaryins-projects.vercel.app/api/control"
+        response = urequests.get(url)
+        data = response.json()
+        response.close()
+        
+        print("Received data:", data)  # พิมพ์ข้อมูลที่ได้รับ
+        
+        if isinstance(data, list) and len(data) > 0 and isinstance(data[0], dict):
+            return data[0].get("red", "off"), data[0].get("green", "off")
+        else:
+            print("Unexpected data format")
+            return "off", "off"
+    except Exception as e:
+        print("Failed to get LED status:", e)
+        return "off", "off"
+
+# ฟังก์ชันสำหรับส่งข้อมูลทั้งหมดไปยัง API
+def send_all_to_api(distance, ultrasonic_status, temperature, humidity, red_status, green_status):
+    try:
+        url = "https://my-miniproject67-1nhqv10rf-jaryins-projects.vercel.app/api/postAll"
         headers = {
             "Content-Type": "application/json",
         }
         data = {
             "ultrasonicValue": str(distance),
-            "status": status
-        }
-        
-        response = urequests.post(url, json=data, headers=headers)
-        print(response.text)
-        response.close()
-    except Exception as e:
-        print("Failed to send ultrasonic data:", e)
-
-# ฟังก์ชันสำหรับส่งข้อมูล DHT11 ไปยัง API
-def send_dht11_to_api(temperature, humidity):
-    try:
-        url = "https://my-miniproject67-bisul7nf4-jaryins-projects.vercel.app/api/getDht11"
-        headers = {
-            "Content-Type": "application/json",
-        }
-        data = {
+            "ultrasonicStatus": ultrasonic_status,
             "temperature": str(temperature),
-            "humidity": str(humidity)
+            "humidity": str(humidity),
+            "redStatus": red_status,
+            "greenStatus": green_status
         }
         print("Sending data:", data)  # บันทึกข้อมูลที่กำลังจะส่ง
         
@@ -86,8 +93,7 @@ def send_dht11_to_api(temperature, humidity):
         print("Response:", response.text)
         response.close()
     except Exception as e:
-        print("Failed to send DHT11 data:", e)
-
+        print("Failed to send all data:", e)
 
 # วนลูปเพื่อตรวจจับและส่งข้อมูล
 while True:
@@ -96,14 +102,28 @@ while True:
     
     if distance <= 50:
         print("The distance from object is ", distance, "cm")
-        led.high()  # เปิด LED เมื่ออยู่ในระยะ 50 cm
-        send_ultrasonic_to_api(distance, 1)  # ส่งข้อมูล Ultrasonic sensor เมื่อระยะทางน้อยกว่าหรือเท่ากับ 50 cm
+        led_ultrasonic.high()  # เปิด LED เมื่ออยู่ในระยะ 50 cm
+        ultrasonic_status = 1  # สถานะของ ultrasonic sensor
     else:
         print("Object is out of range.")
-        led.low()  # ปิด LED เมื่ออยู่นอกระยะ 50 cm
-        send_ultrasonic_to_api(0, 0)
-        # ไม่ส่งข้อมูล Ultrasonic sensor เมื่อระยะทางมากกว่า 50 cm
-        
-    send_dht11_to_api(temperature, humidity)  # ส่งข้อมูล DHT11 sensor
+        led_ultrasonic.low()  # ปิด LED เมื่ออยู่นอกระยะ 50 cm
+        ultrasonic_status = 0
+    
+    # ดึงข้อมูลสถานะ LED จากฐานข้อมูล
+    red_status, green_status = get_led_status()
+    
+    # ส่งข้อมูลทั้งหมดไปยัง API
+    send_all_to_api(distance, ultrasonic_status, temperature, humidity, red_status, green_status)
+    
+    # อัปเดต LED ตามสถานะที่ได้รับ
+    if red_status == "on":
+        led_red.high()
+    else:
+        led_red.low()
+
+    if green_status == "on":
+        led_green.high()
+    else:
+        led_green.low()
     
     utime.sleep(1)
