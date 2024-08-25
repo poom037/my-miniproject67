@@ -36,7 +36,7 @@ export async function POST(Request: Request) {
             headers: {
                 ...corsHeaders,
                 "Content-Type": "application/json",
-                "Cache-Control": "no-cache",
+                "Cache-Control": "no-cache"
             },
         });
     } catch (error) {
