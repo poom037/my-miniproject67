@@ -18,7 +18,7 @@ wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
 wlan.connect(ssid, password)
 
-while wlan.isconnected() == False:
+while not wlan.isconnected():
     print('Waiting for connection...')
     time.sleep(1)
 
@@ -30,7 +30,7 @@ def ultra():
     trigger.low()
     utime.sleep_us(2)
     trigger.high()
-    utime.sleep_us(5)
+    utime.sleep_us(2)
     trigger.low()
     
     while echo.value() == 0:
@@ -72,7 +72,7 @@ def send_ultrasonic_to_api(distance, status):
 # ฟังก์ชันสำหรับส่งข้อมูล DHT11 ไปยัง API
 def send_dht11_to_api(temperature, humidity):
     try:
-        url = "https://my-miniproject67-ib681mo6p-jaryins-projects.vercel.app/api/getDht11"
+        url = "https://my-miniproject67-bisul7nf4-jaryins-projects.vercel.app/api/getDht11"
         headers = {
             "Content-Type": "application/json",
         }
@@ -80,31 +80,30 @@ def send_dht11_to_api(temperature, humidity):
             "temperature": str(temperature),
             "humidity": str(humidity)
         }
+        print("Sending data:", data)  # บันทึกข้อมูลที่กำลังจะส่ง
         
         response = urequests.post(url, json=data, headers=headers)
-        print(response.text)
+        print("Response:", response.text)
         response.close()
     except Exception as e:
         print("Failed to send DHT11 data:", e)
+
 
 # วนลูปเพื่อตรวจจับและส่งข้อมูล
 while True:
     distance = ultra()
     temperature, humidity = read_dht11()
-
-    # แสดงค่าที่อ่านจาก DHT11 บนคอนโซล
-    print("Temperature:", temperature, "°C")
-    print("Humidity:", humidity, "%")
     
     if distance <= 50:
         print("The distance from object is ", distance, "cm")
         led.high()  # เปิด LED เมื่ออยู่ในระยะ 50 cm
-        send_ultrasonic_to_api(distance, 1)  # ส่งข้อมูล Ultrasonic sensor
+        send_ultrasonic_to_api(distance, 1)  # ส่งข้อมูล Ultrasonic sensor เมื่อระยะทางน้อยกว่าหรือเท่ากับ 50 cm
     else:
         print("Object is out of range.")
         led.low()  # ปิด LED เมื่ออยู่นอกระยะ 50 cm
-        send_ultrasonic_to_api(distance, 0)  # ส่งข้อมูล Ultrasonic sensor
+        send_ultrasonic_to_api(0, 0)
+        # ไม่ส่งข้อมูล Ultrasonic sensor เมื่อระยะทางมากกว่า 50 cm
         
     send_dht11_to_api(temperature, humidity)  # ส่งข้อมูล DHT11 sensor
     
-    utime.sleep(0.5)
+    utime.sleep(1)

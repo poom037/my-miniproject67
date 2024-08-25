@@ -63,3 +63,23 @@ export async function POST(req: Request) {
         });
     }
 }
+
+export async function GET() {
+    try {
+        const result = await client.query('SELECT red,green FROM pn014');
+        return new Response(JSON.stringify(result.rows), {
+            status: 200,
+            headers: {
+                ...corsHeaders,
+                "Content-Type": "application/json",
+                "Cache-Control": "no-cache",
+            },
+        });
+    } catch (error) {
+        console.error("Error fetching users:", error);
+        return new Response(JSON.stringify({ error: "Internal Server Error" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+    }
+}
