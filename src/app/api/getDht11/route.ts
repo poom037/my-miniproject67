@@ -69,3 +69,11 @@ export async function POST(request:Request) {
     }
     
 }
+
+// handle OPTIONS method for CORS preflight requests
+export function OPTIONS() {
+    return new Response(null, {
+        status: 204,
+        headers: corsHeaders,
+    });
+}
