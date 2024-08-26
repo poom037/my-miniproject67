@@ -38,7 +38,7 @@ const Dashboard = () => {
     };
   
     fetchData();
-    const interval = setInterval(fetchData, 30000); // Fetch data every 30 seconds
+    const interval = setInterval(fetchData, 1000); // Fetch data every 30 seconds
     return () => clearInterval(interval); // Clean up the interval on component unmount
   }); // Empty dependency array to run only on mount
 
@@ -75,6 +75,7 @@ const Dashboard = () => {
   };
 
   return (
+    `${ultrasonic != 0 ? "asd" : "bg-red-500"}`
     <div className="min-h-screen bg-gray-100">
       <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
