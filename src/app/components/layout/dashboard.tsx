@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Logo from "../ui/logo";
 
 const Dashboard = () => {
   // state management for LED, Ultrasonic, Temperature, and Humidity
@@ -7,7 +8,7 @@ const Dashboard = () => {
   const [isLedGreenOn, setIsLedGreenOn] = useState(false);
   const [temperature, setTemperature] = useState<number | null>(null);
   const [humidity, setHumidity] = useState<number | null>(null);
-  const [ultrasonic, setUltrasonic] = useState<number | null>(null);
+  const [ultrasonic, setUltrasonic] = useState<number | null>(0);
   const [latestId, setLatestId] = useState<number | null>(null); // state to keep track of the latest ID
 
   useEffect(() => {
@@ -16,17 +17,17 @@ const Dashboard = () => {
         const result = await fetch("/api/getAll");
         const data = await result.json();
         console.log("Fetched data:", data);
-  
+
         if (data.length > 0) {
           const latestData = data[data.length - 1];
           setTemperature(latestData.temperature);
           setHumidity(latestData.humidity);
           setUltrasonic(latestData.ultrasonic);
-  
+
           // Convert "on" to true and "off" to false
           setIsLedOn(latestData.red === "on");
           setIsLedGreenOn(latestData.green === "on");
-  
+
           // Update latestId state only if the id is different
           if (latestData.id !== latestId) {
             setLatestId(latestData.id);
@@ -36,11 +37,11 @@ const Dashboard = () => {
         console.error("Error fetching data:", error);
       }
     };
-  
+
     fetchData();
-    const interval = setInterval(fetchData, 1000); // Fetch data every 30 seconds
+    const interval = setInterval(fetchData, 1000); // Fetch data every second
     return () => clearInterval(interval); // Clean up the interval on component unmount
-  }); // Empty dependency array to run only on mount
+  }, [latestId]); // Update when latestId changes
 
   const sendLedState = async (ledColor: string, state: string) => {
     try {
@@ -74,68 +75,71 @@ const Dashboard = () => {
     await sendLedState("green", newState); // send "green" and the new state to the API
   };
 
-  return (
-    `${ultrasonic != 0 ? "asd" : "bg-red-500"}`
-    <div className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* LED RED Control */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">
-              LED <span className="text-red-500">RED</span>
-            </h2>
-            <button
-              onClick={toggleLed}
-              className={`mt-4 px-4 py-2 rounded-md text-white ${
-                isLedOn ? "bg-red-600" : "bg-green-600"
-              }`}
-            >
-              {isLedOn ? "Turn Off LED" : "Turn On LED"}
-            </button>
-          </div>
+  if (ultrasonic != 0) {
+    return (
+      <div className="min-h-screen bg-gray-100 bg-gradient-to-br from-blue-500 to-purple-600">
+        <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* LED RED Control */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900">
+                LED <span className="text-red-500">RED</span>
+              </h2>
+              <button
+                onClick={toggleLed}
+                className={`mt-4 px-4 py-2 rounded-md text-white ${
+                  isLedOn ? "bg-red-600" : "bg-green-600"
+                }`}
+              >
+                {isLedOn ? "Turn Off LED" : "Turn On LED"}
+              </button>
+            </div>
 
-          {/* LED GREEN Control */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">
-              LED <span className="text-green-500">GREEN</span>
-            </h2>
-            <button
-              onClick={toggleUltrasonic}
-              className={`mt-4 px-4 py-2 rounded-md text-white ${
-                isLedGreenOn ? "bg-red-600" : "bg-green-600"
-              }`}
-            >
-              {isLedGreenOn ? "Turn Off LED" : "Turn On LED"}
-            </button>
-          </div>
+            {/* LED GREEN Control */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900">
+                LED <span className="text-green-500">GREEN</span>
+              </h2>
+              <button
+                onClick={toggleUltrasonic}
+                className={`mt-4 px-4 py-2 rounded-md text-white ${
+                  isLedGreenOn ? "bg-red-600" : "bg-green-600"
+                }`}
+              >
+                {isLedGreenOn ? "Turn Off LED" : "Turn On LED"}
+              </button>
+            </div>
 
-          {/* Temperature Data */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">Temperature</h2>
-            <p className="mt-4 text-2xl font-bold text-gray-900">
-              {temperature !== null ? `${temperature}°C` : "Loading..."}
-            </p>
-          </div>
+            {/* Temperature Data */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900">Temperature</h2>
+              <p className="mt-4 text-2xl font-bold text-gray-900">
+                {temperature !== null ? `${temperature}°C` : "Loading..."}
+              </p>
+            </div>
 
-          {/* Humidity Data */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">Humidity</h2>
-            <p className="mt-4 text-2xl font-bold text-gray-900">
-              {humidity !== null ? `${humidity}%` : "Loading..."}
-            </p>
-          </div>
+            {/* Humidity Data */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900">Humidity</h2>
+              <p className="mt-4 text-2xl font-bold text-gray-900">
+                {humidity !== null ? `${humidity}%` : "Loading..."}
+              </p>
+            </div>
 
-          {/* Ultrasonic Data */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">Ultrasonic</h2>
-            <p className="mt-4 text-2xl font-bold text-gray-900">
-              {ultrasonic !== null ? `${ultrasonic}cm` : "Loading..."}
-            </p>
+            {/* Ultrasonic Data */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <h2 className="text-lg font-medium text-gray-900">Ultrasonic</h2>
+              <p className="mt-4 text-2xl font-bold text-gray-900">
+                {ultrasonic !== null ? `${ultrasonic}cm` : "Loading..."}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  } else {
+    return <Logo ultrasonic={ultrasonic} />;
+  }
 };
 
 export default Dashboard;
