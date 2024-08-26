@@ -75,17 +75,21 @@ def get_led_status():
 # ฟังก์ชันสำหรับส่งข้อมูลทั้งหมดไปยัง API
 def send_all_to_api(distance, ultrasonic_status, temperature, humidity, red_status, green_status):
     try:
-        url = "https://my-miniproject67-1nhqv10rf-jaryins-projects.vercel.app/api/postAll"
+        url = "https://my-miniproject67-i1mhnsrfa-jaryins-projects.vercel.app/api/postAll"
         headers = {
             "Content-Type": "application/json",
         }
+        
+        # ถ้าค่าระยะทางมากกว่า 50 cm จะส่งเป็น 0
+        if distance > 50:
+            distance = 0
+            ultrasonic_status = 0
+            
         data = {
-            "ultrasonicValue": str(distance),
-            "ultrasonicStatus": ultrasonic_status,
+            "ultrasonic": str(distance),
+            "status": ultrasonic_status,
             "temperature": str(temperature),
-            "humidity": str(humidity),
-            "redStatus": red_status,
-            "greenStatus": green_status
+            "humidity": str(humidity)
         }
         print("Sending data:", data)  # บันทึกข้อมูลที่กำลังจะส่ง
         

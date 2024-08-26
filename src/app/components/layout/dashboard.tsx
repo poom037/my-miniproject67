@@ -2,29 +2,32 @@
 import { useState, useEffect } from "react";
 
 const Dashboard = () => {
-  // State management for LED, Ultrasonic, Temperature, and Humidity
+  // state management for LED, Ultrasonic, Temperature, and Humidity
   const [isLedOn, setIsLedOn] = useState(false);
   const [isLedGreenOn, setIsLedGreenOn] = useState(false);
   const [temperature, setTemperature] = useState<number | null>(null);
   const [humidity, setHumidity] = useState<number | null>(null);
   const [ultrasonic, setUltrasonic] = useState<number | null>(null);
-  const [infared, setInfared] = useState<number | null>(null);
-  const [latestId, setLatestId] = useState<number | null>(null); // State to keep track of the latest ID
+  const [latestId, setLatestId] = useState<number | null>(null); // state to keep track of the latest ID
 
-  // Fetch data every 5 seconds
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const result = await fetch("/api/getDht11");
+        const result = await fetch("/api/getAll");
         const data = await result.json();
-        console.log("Fetched data:", data); // Check the format of the data
+        console.log("Fetched data:", data);
 
         if (data.length > 0) {
-          const latestData = data[data.length - 1]; // Assuming the latest data is the last element in the array
+          const latestData = data[data.length - 1];
           if (latestData.id !== latestId) {
             setTemperature(latestData.temperature);
             setHumidity(latestData.humidity);
             setLatestId(latestData.id);
+            setUltrasonic(latestData.ultrasonic);
+
+            // Convert "on" to true and "off" to false
+            setIsLedOn(latestData.red === "on");
+            setIsLedGreenOn(latestData.green === "on");
           }
         }
       } catch (error) {
@@ -32,34 +35,41 @@ const Dashboard = () => {
       }
     };
 
-    const interval = setInterval(fetchData, 30000); // Fetch data every 5 seconds
+    fetchData();
+    const interval = setInterval(fetchData, 30000);
     return () => clearInterval(interval);
   }, [latestId]);
 
   const sendLedState = async (ledColor: string, state: string) => {
-    const response = await fetch("/api/control", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ led: ledColor, state: state }), // Send LED color and state
-    });
+    try {
+      const response = await fetch("/api/control", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ led: ledColor, state: state }), // send LED color and state
+      });
 
-    if (!response.ok) {
-      console.error(`Failed to toggle ${ledColor} LED:`, response.statusText);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to toggle ${ledColor} LED: ${response.statusText}`
+        );
+      }
+    } catch (error) {
+      console.error("Error sending LED state:", error);
     }
   };
 
   const toggleLed = async () => {
     const newState = isLedOn ? "off" : "on";
     setIsLedOn(!isLedOn);
-    await sendLedState("red", newState); // Send "red" and the new state to the API
+    await sendLedState("red", newState); // send "red" and the new state to the API
   };
 
   const toggleUltrasonic = async () => {
     const newState = isLedGreenOn ? "off" : "on";
     setIsLedGreenOn(!isLedGreenOn);
-    await sendLedState("green", newState); // Send "green" and the new state to the API
+    await sendLedState("green", newState); // send "green" and the new state to the API
   };
 
   return (
@@ -116,15 +126,7 @@ const Dashboard = () => {
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-lg font-medium text-gray-900">Ultrasonic</h2>
             <p className="mt-4 text-2xl font-bold text-gray-900">
-              {ultrasonic !== null ? `${ultrasonic}%` : "Loading..."}
-            </p>
-          </div>
-
-          {/* Infared Data */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-medium text-gray-900">Infared</h2>
-            <p className="mt-4 text-2xl font-bold text-gray-900">
-              {infared !== null ? `${infared}%` : "Loading..."}
+              {ultrasonic !== null ? `${ultrasonic}cm` : "Loading..."}
             </p>
           </div>
         </div>
