@@ -16,29 +16,31 @@ const Dashboard = () => {
         const result = await fetch("/api/getAll");
         const data = await result.json();
         console.log("Fetched data:", data);
-
+  
         if (data.length > 0) {
           const latestData = data[data.length - 1];
+          setTemperature(latestData.temperature);
+          setHumidity(latestData.humidity);
+          setUltrasonic(latestData.ultrasonic);
+  
+          // Convert "on" to true and "off" to false
+          setIsLedOn(latestData.red === "on");
+          setIsLedGreenOn(latestData.green === "on");
+  
+          // Update latestId state only if the id is different
           if (latestData.id !== latestId) {
-            setTemperature(latestData.temperature);
-            setHumidity(latestData.humidity);
             setLatestId(latestData.id);
-            setUltrasonic(latestData.ultrasonic);
-
-            // Convert "on" to true and "off" to false
-            setIsLedOn(latestData.red === "on");
-            setIsLedGreenOn(latestData.green === "on");
           }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
-
+  
     fetchData();
-    const interval = setInterval(fetchData, 30000);
-    return () => clearInterval(interval);
-  }, [latestId]);
+    const interval = setInterval(fetchData, 30000); // Fetch data every 30 seconds
+    return () => clearInterval(interval); // Clean up the interval on component unmount
+  }); // Empty dependency array to run only on mount
 
   const sendLedState = async (ledColor: string, state: string) => {
     try {
