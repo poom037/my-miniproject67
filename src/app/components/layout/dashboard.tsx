@@ -112,7 +112,7 @@ const Dashboard = () => {
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900">Vibration</h2>
               <p className="mt-4 text-2xl font-bold text-gray-900">
-                {vibration !== null ? `${vibration}m/s2` : "Loading..."}
+                {vibration !== null ? `${vibration}` : "Loading..."}
               </p>
             </div>
 
