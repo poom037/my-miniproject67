@@ -108,19 +108,19 @@ const Dashboard = () => {
               </button>
             </div>
 
-            {/* Temperature Data */}
+            {/* Vibration Data */}
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900">Vibration</h2>
               <p className="mt-4 text-2xl font-bold text-gray-900">
-                {vibration !== null ? `${vibration}°C` : "Loading..."}
+                {vibration !== null ? `${vibration}m/s2` : "Loading..."}
               </p>
             </div>
 
-            {/* Humidity Data */}
+            {/* LDR Data */}
             <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-medium text-gray-900">Ldr</h2>
+              <h2 className="text-lg font-medium text-gray-900">LDR</h2>
               <p className="mt-4 text-2xl font-bold text-gray-900">
-                {ldr !== null ? `${ldr}%` : "Loading..."}
+                {ldr !== null ? `${ldr}Lux` : "Loading..."}
               </p>
             </div>
 
